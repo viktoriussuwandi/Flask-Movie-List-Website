@@ -77,8 +77,24 @@ def home() :
   all_movies  = Movies.query.all()
   return render_template("index.html", movies = all_movies)
 
+@app.route("add")
+def add() :
+  
+  return render_template("add.html")
+
 # ---------------------------------------------------------------------------------------
 # HOST-PORT
 # ---------------------------------------------------------------------------------------
 if __name__ == "__main__" :
   app.run(debug=True, host="0.0.0.0",port=2000)
+
+
+# Example API request :
+# https://api.themoviedb.org/3/movie/550?api_key=43f74160b22cece803a5937d1909912f
+  
+# API Key (v3 auth) :
+# 43f74160b22cece803a5937d1909912f
+
+# API Read Access Token (v4 auth):
+# eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0M2Y3NDE2MGIyMmNlY2U4MDNhNTkzN2QxOTA5OTEyZiIsInN1YiI6IjVlOTFjNTg2YmVmYjA5MDAxYWJkMzQ3NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.EcBJQhnxurpW-O7SjuIWOg1VstVFwNqdT0s4eeEtsLo
+
