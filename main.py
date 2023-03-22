@@ -71,15 +71,18 @@ def first_movies() :
 # ROUTING FUNCTIONS
 # ---------------------------------------------------------------------------------------
 
+
+# ---------------------------------------------------------------------------------------
+# ROUTING FUNCTIONS
+# ---------------------------------------------------------------------------------------
 @app.route("/")
 def home() :
   first_movies()
   all_movies  = Movies.query.all()
   return render_template("index.html", movies = all_movies)
 
-@app.route("add")
+@app.route("/add")
 def add() :
-  
   return render_template("add.html")
 
 # ---------------------------------------------------------------------------------------
