@@ -1,10 +1,10 @@
 from flask import Flask, render_template, request, redirect
 from flask_bootstrap import Bootstrap
-import os
+import os, requests
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import exc
 from flask_wtf import FlaskForm
-from wtforms import TextAreaField, SubmitField, DecimalField
+from wtforms import TextAreaField, StringField, DecimalField, SubmitField
 from wtforms.validators import DataRequired, NumberRange, length
 
 # ---------------------------------------------------------------------------------------
@@ -70,7 +70,11 @@ class UpdateForm(FlaskForm) :
                           validators = [ NumberRange(min=0,max=10) ] )
   review = TextAreaField( label  = "Review", 
                           validators = [ DataRequired(), length(max=250) ] )
-  submit = SubmitField(   label  = "Submit")
+  submit = SubmitField(   label  = "Done")
+
+class AddForm(FlaskForm) :
+  title  = StringField(label = "Movie Title", validators = [ DataRequired() ])
+  submit = SubmitField(label = "Add Movie")
 
 # ---------------------------------------------------------------------------------------
 # ROUTING FUNCTIONS
@@ -108,23 +112,23 @@ def delete() :
   db.session.commit()
   return redirect('/')
   
-@app.route("/add")
+@app.route("/add", methods = ["GET", "POST"])
 def add() :
-  return render_template("add.html")
-
+  add_form = AddForm()
+  if request.method == "POST" and add_form.validate_on_submit() :
+    movie_title = add_form.title.data
+    search_url  = os.environ['url_api']
+    api_key     = os.environ['api_key']
+    response    = requests.get(
+      search_url, params = { "api_key": api_key, "query": movie_title }
+    )
+    tmdb_movies = response.json()["results"]
+    # return render_template("select.html", movies = tmdb_movies)
+    return tmdb_movies
+  return render_template("add.html", form = add_form)
 # ---------------------------------------------------------------------------------------
 # HOST-PORT
 # ---------------------------------------------------------------------------------------
 if __name__ == "__main__" :
   app.run(debug=True, host="0.0.0.0",port=2000)
-
-
-# Example API request :
-# https://api.themoviedb.org/3/movie/550?api_key=43f74160b22cece803a5937d1909912f
-  
-# API Key (v3 auth) :
-# 43f74160b22cece803a5937d1909912f
-
-# API Read Access Token (v4 auth):
-# eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0M2Y3NDE2MGIyMmNlY2U4MDNhNTkzN2QxOTA5OTEyZiIsInN1YiI6IjVlOTFjNTg2YmVmYjA5MDAxYWJkMzQ3NSIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.EcBJQhnxurpW-O7SjuIWOg1VstVFwNqdT0s4eeEtsLo
 
