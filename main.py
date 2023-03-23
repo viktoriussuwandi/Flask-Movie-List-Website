@@ -8,6 +8,33 @@ from wtforms import TextAreaField, SubmitField, DecimalField
 from wtforms.validators import DataRequired, NumberRange, length
 
 # ---------------------------------------------------------------------------------------
+# ADDITIONAL DATABASE FUNCTIONS
+# ---------------------------------------------------------------------------------------
+def add_movie(movie) :
+  try :
+    db.session.add(movie)
+    return db.session.commit()
+  except exc.IntegrityError :
+    # print('Duplicate data')
+    db.session.rollback()
+    return False
+
+def first_movies(first_use = False) :
+  count_data    = Movies.query.count()
+  if count_data == 0 and first_use == True :
+    init_movie    = Movies(
+      id          = 1,
+      title       = "Phone Booth",
+      year        = 2002,
+      description = "Publicist Stuart Shepard finds himself trapped in a phone booth, pinned down by an extortionist's sniper rifle. Unable to leave or receive outside help, Stuart's negotiation with the caller leads to a jaw-dropping climax.",
+      rating      = 7.3,
+      ranking     = 10,
+      review      = "My favourite character was the caller.",
+      img_url     = "https://image.tmdb.org/t/p/w500/tjrX2oWRCM3Tvarz38zlZM7Uc10.jpg"
+    )
+    add_movie(init_movie)
+    
+# ---------------------------------------------------------------------------------------
 # FLASK APP & DATABASE
 # ---------------------------------------------------------------------------------------
 app = Flask(__name__)
@@ -31,51 +58,25 @@ class Movies(db.Model) :
   def __repr__(self) :
     return '<Movies {self.title}>'
     
-with app.app_context() : db.create_all()
-
-# ---------------------------------------------------------------------------------------
-# DATABASE FUNCTIONS
-# ---------------------------------------------------------------------------------------
-def add_movie(movie) :
-  try :
-    db.session.add(movie)
-    return db.session.commit()
-  except exc.IntegrityError :
-    # print('Duplicate data')
-    db.session.rollback()
-    return False
-
-def first_movies() :
-  count_data    = Movies.query.count()
-  if count_data == 0 :
-    init_movie    = Movies(
-      id          = 1,
-      title       = "Phone Booth",
-      year        = 2002,
-      description = "Publicist Stuart Shepard finds himself trapped in a phone booth, pinned down by an extortionist's sniper rifle. Unable to leave or receive outside help, Stuart's negotiation with the caller leads to a jaw-dropping climax.",
-      rating      = 7.3,
-      ranking     = 10,
-      review      = "My favourite character was the caller.",
-      img_url     = "https://image.tmdb.org/t/p/w500/tjrX2oWRCM3Tvarz38zlZM7Uc10.jpg"
-    )
-    add_movie(init_movie)
+with app.app_context() : 
+  db.create_all()
+  first_movies(first_use = True)
     
 # ---------------------------------------------------------------------------------------
 # WTF FORM VALIDATION FUNCTION
 # ---------------------------------------------------------------------------------------
 class UpdateForm(FlaskForm) :
-  rating      = DecimalField(  label = "Rating", 
-                               validators = [ NumberRange(min=0,max=10) ] )
-  description = TextAreaField( label  = "Description", 
-                               validators = [ DataRequired(), length(max=250) ] )
-  submit      = SubmitField(   label  = "Submit")
+  rating = DecimalField(  label = "Rating", 
+                          validators = [ NumberRange(min=0,max=10) ] )
+  review = TextAreaField( label  = "Review", 
+                          validators = [ DataRequired(), length(max=250) ] )
+  submit = SubmitField(   label  = "Submit")
 
 # ---------------------------------------------------------------------------------------
 # ROUTING FUNCTIONS
 # ---------------------------------------------------------------------------------------
 @app.route("/")
 def home() :
-  first_movies()
   all_movies  = Movies.query.all()
   return render_template("index.html", movies = all_movies)
 
@@ -86,11 +87,11 @@ def update() :
   update_form = UpdateForm()
   
   if request.method == "GET" :
-    update_form.rating.data      = find_movie.rating
-    update_form.description.data = find_movie.description 
-  else :
-    find_movie.rating      = update_form.rating.data
-    find_movie.description = update_form.description.data
+    update_form.rating.data = find_movie.rating
+    update_form.review.data = find_movie.review 
+  elif update_form.validate_on_submit() :
+    find_movie.rating = update_form.rating.data
+    find_movie.review = update_form.review.data
     db.session.commit()
     return redirect("/")
   
@@ -99,9 +100,13 @@ def update() :
   movie_data["form"]  = update_form
   return render_template("update.html", data = movie_data)
 
-@app.route("/select")
+@app.route("/delete")
 def delete() :
-  return render_template("select.html")
+  movie_id    = request.args.get('id')
+  find_movie  = Movies.query.get(movie_id)
+  db.session.delete(find_movie)
+  db.session.commit()
+  return redirect('/')
   
 @app.route("/add")
 def add() :
