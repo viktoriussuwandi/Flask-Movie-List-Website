@@ -8,7 +8,6 @@
 {% block title %}My Top 10 Movies{% endblock %}
 
 {% block content %}
-
 <div class="container">
   <h1 class="heading">My Top 10 Movies</h1>
   <p class="description">These are my all time favourite movies.</p>
@@ -27,14 +26,14 @@
         </div>
         
         <div class="rating">
-            <label>{{ m.rating }}</label>
+          <label>{{ m.rating }}</label>
           <i class="fas fa-star star"></i>
         </div>
         
         <p class="review">{{ m.review }} </p>
         <p class="overview">{{ m.description }}</p>
-        <a href="#" class="button">Update</a>
-        <a href="#" class="button delete-button">Delete</a>
+        <a href="{{ url_for('update', id = m.id) }}" class="button">Update</a>
+        <a href="{{ url_for('delete', id = m.id) }}" class="button delete-button">Delete</a>
 
       </div>
       

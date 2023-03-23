@@ -10,7 +10,10 @@
 
 {% block content %}
 <div class="content">
-  <h1 class="heading">Movie Title</h1>
-    <p class="description">Edit Movie Rating</p>
-  </div>
+  <h1 class="heading">{{ data["movie"].title }}</h1>
+    <p class="description">Edit Movie Rating</p>    
+</div>
+<div class="container" style="margin:50px;">
+  {{ wtf.quick_form(data["form"], novalidate=True) }}
+</div>
 {% endblock %}

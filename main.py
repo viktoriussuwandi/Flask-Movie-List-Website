@@ -1,8 +1,11 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 from flask_bootstrap import Bootstrap
 import os
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import exc
+from flask_wtf import FlaskForm
+from wtforms import TextAreaField, SubmitField, DecimalField
+from wtforms.validators import DataRequired, NumberRange, length
 
 # ---------------------------------------------------------------------------------------
 # FLASK APP & DATABASE
@@ -16,14 +19,14 @@ app.config ['SQLALCHEMY_TRACK_MODIFICATION'] = False
 db = SQLAlchemy(app)
 
 class Movies(db.Model) :
-  id          = db.Column(db.Integer, primary_key = True)
-  title       = db.Column(db.String(250), unique=True, nullable=False)
-  year        = db.Column(db.Integer, nullable=False)
-  description = db.Column(db.String, nullable=False)
-  rating      = db.Column(db.Float, nullable=False)
-  ranking     = db.Column(db.Float, nullable=False)
-  review      = db.Column(db.String(250), nullable=False)
-  img_url     = db.Column(db.String, nullable=False)
+  id          = db.Column("id",db.Integer, primary_key = True)
+  title       = db.Column("title",db.String(250), unique=True, nullable=False)
+  year        = db.Column("year",db.Integer, nullable=False)
+  description = db.Column("description",db.String, nullable=False)
+  rating      = db.Column("rating",db.Float, nullable=False)
+  ranking     = db.Column("ranking",db.Float, nullable=False)
+  review      = db.Column("review",db.String(250), nullable=False)
+  img_url     = db.Column("img_url",db.String, nullable=False)
 
   def __repr__(self) :
     return '<Movies {self.title}>'
@@ -60,17 +63,12 @@ def first_movies() :
 # ---------------------------------------------------------------------------------------
 # WTF FORM VALIDATION FUNCTION
 # ---------------------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------------------
-# WTF FORM VALIDATION FUNCTION
-# ---------------------------------------------------------------------------------------
-
-    
-# ---------------------------------------------------------------------------------------
-# ROUTING FUNCTIONS
-# ---------------------------------------------------------------------------------------
-
+class UpdateForm(FlaskForm) :
+  rating      = DecimalField(  label = "Rating", 
+                               validators = [ NumberRange(min=0,max=10) ] )
+  description = TextAreaField( label  = "Description", 
+                               validators = [ DataRequired(), length(max=250) ] )
+  submit      = SubmitField(   label  = "Submit")
 
 # ---------------------------------------------------------------------------------------
 # ROUTING FUNCTIONS
@@ -81,6 +79,30 @@ def home() :
   all_movies  = Movies.query.all()
   return render_template("index.html", movies = all_movies)
 
+@app.route("/update", methods = ["GET", "POST"])
+def update() :
+  movie_id    = request.args.get('id')
+  find_movie  = Movies.query.get(movie_id)
+  update_form = UpdateForm()
+  
+  if request.method == "GET" :
+    update_form.rating.data      = find_movie.rating
+    update_form.description.data = find_movie.description 
+  else :
+    find_movie.rating      = update_form.rating.data
+    find_movie.description = update_form.description.data
+    db.session.commit()
+    return redirect("/")
+  
+  movie_data  = {}
+  movie_data["movie"] = find_movie
+  movie_data["form"]  = update_form
+  return render_template("update.html", data = movie_data)
+
+@app.route("/select")
+def delete() :
+  return render_template("select.html")
+  
 @app.route("/add")
 def add() :
   return render_template("add.html")
