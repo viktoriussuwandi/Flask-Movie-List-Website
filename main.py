@@ -20,6 +20,13 @@ def add_movie(movie) :
     db.session.rollback()
     return False
 
+def update_rank() :
+  count_data = Movies.query.count()
+  if count_data > 0 :
+    movie_list = Movies.query.order_by(Movies.rating).all()
+    for i in range(count_data) : movie_list[i].ranking = count_data - i
+    db.session.commit()
+
 def first_movies(first_use = False) :
   count_data    = Movies.query.count()
   if count_data == 0 and first_use == True :
@@ -53,7 +60,7 @@ class Movies(db.Model) :
   year        = db.Column("year",db.Integer, nullable=False)
   description = db.Column("description",db.String, nullable=False)
   rating      = db.Column("rating",db.Float, nullable=False)
-  ranking     = db.Column("ranking",db.Float, nullable=False)
+  ranking     = db.Column("ranking",db.Integer, nullable=False)
   review      = db.Column("review",db.String(250), nullable=False)
   img_url     = db.Column("img_url",db.String, nullable=False)
 
@@ -69,7 +76,8 @@ with app.app_context() :
 # ---------------------------------------------------------------------------------------
 @app.route("/")
 def home() :
-  all_movies  = Movies.query.all()
+  update_rank()
+  all_movies  = Movies.query.order_by(Movies.ranking).limit(10)
   return render_template("index.html", movies = all_movies)
 
 @app.route("/update", methods = ["GET", "POST"])
@@ -107,10 +115,11 @@ def add() :
     movie_title = add_form.title.data
     API.get_movie(movie_title)
     movie_list = API.movie_list
-    return render_template("select.html", movies = movie_list)
+    data_send = {"path_img" : os.environ["url_img"], "movies" : movie_list}
+    return render_template("select.html", data = data_send)
   return render_template("add.html", form = add_form)
 
-@app.route("/select", methods =["GET", "POST"])
+@app.route("/select", methods = ["GET", "POST"])
 def select() :
   api_movie_list = API.movie_list
   api_id         = request.args.get('id')
@@ -121,14 +130,13 @@ def select() :
     year         = find_movie["release_date"][:4],
     description  = find_movie["overview"],
     rating       = find_movie["vote_average"],
-    ranking      = 0,
+    ranking      = 10,
     review       = find_movie["title"],
-    img_url      = f'https://image.tmdb.org/t/p/w500/{find_movie["poster_path"]}'
+    img_url      = f'{ os.environ["url_img"] }{ find_movie["poster_path"] }'
   )
   add_movie(select_movie)
   return redirect('/')
 
-  
 # ---------------------------------------------------------------------------------------
 # HOST-PORT
 # ---------------------------------------------------------------------------------------

@@ -12,11 +12,11 @@
 <div class="container">
     <h1 class="heading">Select Movie</h1>
     <div class="row">
-      {% if movies != [] %}
-      {% for m in movies %}
+      {% if data["movies"] != [] %}
+      {% for m in data["movies"] %}
       <div class="col-sm-auto">
         <div class="card">
-          <div class="front" style="background-image: url('{{ m.backdrop_path }}');">
+          <div class="front" style="background-image: url('{{data['path_img']}}{{ m.poster_path }}');">
           </div>
           <div class="back">
           <div>
