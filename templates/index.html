@@ -12,9 +12,10 @@
   <h1 class="heading">My Top 10 Movies</h1>
   <p class="description">These are my all time favourite movies.</p>
   <div class="row">
+    {% if movies != [] %}
+    {% for m in movies %}
     <div class="col-sm-12">
-  {% if movies != [] %}
-      {% for m in movies %}
+
       <div class="card" >
         <div class="front" style="background-image: url('{{ m.img_url }}');">
             <p class="large">{{ m.ranking }}</p>

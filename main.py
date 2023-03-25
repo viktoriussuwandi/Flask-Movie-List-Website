@@ -112,10 +112,21 @@ def add() :
 
 @app.route("/select", methods =["GET", "POST"])
 def select() :
-  api_id = request.args.get('id')
-  movie_list = API.movie_list
-  data = {"api_id" : api_id, "movies" : movie_list}
-  return data
+  api_movie_list = API.movie_list
+  api_id         = request.args.get('id')
+  find_movie     = [m for m in api_movie_list if m["id"] == int(api_id)][0]
+  select_movie   = Movies(
+    id           = Movies.query.count() + 1,
+    title        = find_movie["title"],
+    year         = find_movie["release_date"][:4],
+    description  = find_movie["overview"],
+    rating       = find_movie["vote_average"],
+    ranking      = 0,
+    review       = find_movie["title"],
+    img_url      = f'https://image.tmdb.org/t/p/w500/{find_movie["poster_path"]}'
+  )
+  add_movie(select_movie)
+  return redirect('/')
 
   
 # ---------------------------------------------------------------------------------------
