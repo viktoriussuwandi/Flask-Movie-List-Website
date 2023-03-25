@@ -1,11 +1,12 @@
 from flask import Flask, render_template, request, redirect
 from flask_bootstrap import Bootstrap
-import os, requests
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import exc
-from flask_wtf import FlaskForm
-from wtforms import TextAreaField, StringField, DecimalField, SubmitField
-from wtforms.validators import DataRequired, NumberRange, length
+
+from api_movies import Movie_api
+from forms import UpdateForm, AddForm
+import os
 
 # ---------------------------------------------------------------------------------------
 # ADDITIONAL DATABASE FUNCTIONS
@@ -35,11 +36,12 @@ def first_movies(first_use = False) :
     add_movie(init_movie)
     
 # ---------------------------------------------------------------------------------------
-# FLASK APP & DATABASE
+# FLASK APP, API, & DATABASE
 # ---------------------------------------------------------------------------------------
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ['form_token']
 Bootstrap(app)
+API   = Movie_api()
 
 app.config ['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///book-collection.db'
 app.config ['SQLALCHEMY_TRACK_MODIFICATION'] = False
@@ -57,24 +59,10 @@ class Movies(db.Model) :
 
   def __repr__(self) :
     return '<Movies {self.title}>'
-    
+
 with app.app_context() : 
   db.create_all()
   first_movies(first_use = True)
-    
-# ---------------------------------------------------------------------------------------
-# WTF FORM VALIDATION FUNCTION
-# ---------------------------------------------------------------------------------------
-class UpdateForm(FlaskForm) :
-  rating = DecimalField(  label = "Rating", 
-                          validators = [ NumberRange(min=0,max=10) ] )
-  review = TextAreaField( label  = "Review", 
-                          validators = [ DataRequired(), length(max=250) ] )
-  submit = SubmitField(   label  = "Done")
-
-class AddForm(FlaskForm) :
-  title  = StringField(label = "Movie Title", validators = [ DataRequired() ])
-  submit = SubmitField(label = "Add Movie")
 
 # ---------------------------------------------------------------------------------------
 # ROUTING FUNCTIONS
@@ -111,21 +99,25 @@ def delete() :
   db.session.delete(find_movie)
   db.session.commit()
   return redirect('/')
-  
+
 @app.route("/add", methods = ["GET", "POST"])
 def add() :
   add_form = AddForm()
   if request.method == "POST" and add_form.validate_on_submit() :
     movie_title = add_form.title.data
-    search_url  = os.environ['url_api']
-    api_key     = os.environ['api_key']
-    response    = requests.get(
-      search_url, params = { "api_key": api_key, "query": movie_title }
-    )
-    tmdb_movies = response.json()["results"]
-    # return render_template("select.html", movies = tmdb_movies)
-    return tmdb_movies
+    API.get_movie(movie_title)
+    movie_list = API.movie_list
+    return render_template("select.html", movies = movie_list)
   return render_template("add.html", form = add_form)
+
+@app.route("/select", methods =["GET", "POST"])
+def select() :
+  api_id = request.args.get('id')
+  movie_list = API.movie_list
+  data = {"api_id" : api_id, "movies" : movie_list}
+  return data
+
+  
 # ---------------------------------------------------------------------------------------
 # HOST-PORT
 # ---------------------------------------------------------------------------------------

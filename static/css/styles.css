@@ -73,7 +73,7 @@
 }
  @media screen and (max-width: 800px) {
 	 .card {
-		 width: calc(50% - 3rem);
+		 width: calc(33% - 3rem);
 	}
 }
  @media screen and (max-width: 500px) {

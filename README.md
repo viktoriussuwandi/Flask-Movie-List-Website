@@ -1,9 +1,9 @@
 ## Movie List Web Development
 #### This is a project of movie list to store your movie collections. Deleopment using API database, WTF form, SQLite, and Flask web server.
 
-#### This project running on : https://replit.com/@ViktoriusSuwand/AppBrewery-python-Day-64-Movie-Flask-Website
+#### This project running on : [https://replit.com/@ViktoriusSuwand/AppBrewery-python-Day-64-Movie-Flask-Website](https://replit.com/@ViktoriusSuwand/AppBrewery-python-Day-64-Movie-Flask-Website)
 
-#### Documentation can be found on : https://github.com/viktoriussuwandi/Movie-List-Website
+#### Documentation can be found on : [https://github.com/viktoriussuwandi/Movie-List-Website](https://github.com/viktoriussuwandi/Movie-List-Website)
 
 ### Technology and Features :
     * API to get data from movies database
